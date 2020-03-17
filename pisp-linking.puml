@@ -1,0 +1,79 @@
+@startuml
+
+title PISP: Linking
+
+box "Mobile device"
+    actor Alice
+    participant "PISP App" as App
+end box
+box "DFSP"
+    participant "DFSP A\n(as Identity Provider)" as IP
+    participant "DFSP A\n(as FIDO Server)" as FIDO
+    participant "DFSP A\n(as Account Info Provider)" as AIP
+end box
+
+Alice -> App: I'd like to link an account please.
+activate App
+App --> Alice: No problem. Which FSP?\nSupported options are: A, B, C, ...
+activate Alice
+deactivate App
+Alice -> App: My account is with DFSP A.
+deactivate Alice
+activate App
+
+group OAuth2: Login
+    App -> Alice: OK. We'll open a WebView for your DFSP.\nIt will redirect to us when you're done.
+    deactivate App
+    activate Alice
+    Alice -> IP: ""GET dfspa.example.com/login""
+    activate IP
+    IP --> Alice: ""<html><form ...> ...</html>""
+    deactivate IP
+    Alice -> IP: ""POST dfspa.example.com/login { username: Alice, password: ****** }""
+    deactivate Alice
+    activate IP
+    IP -> App: 302. Alice logged in.\nHere's a token you can use on her behalf.
+    deactivate IP
+    activate App
+end
+
+group Listing accounts
+    App -> AIP: Here's my token.\nCan you show me the accounts I have access to?
+    deactivate App
+    activate AIP
+    AIP --> App: Sure. There's account #1, #2, and #3.
+    deactivate AIP
+    activate App
+    App -> Alice: You have access to Account #1, #2, and #3.\nWhich do you want to link?
+    deactivate App
+    activate Alice
+end
+
+group FIDO: Registration
+    Alice --> App: I'd like to link Account #1 please.
+    deactivate Alice
+    activate App
+    App -> FIDO: I'd like to register a key for Alice's Account #1.\nHere's my token. Challenge me please?
+    deactivate App
+    activate FIDO
+    FIDO --> App: Here's a challenge.\nSend it back signed along with the public key.
+    deactivate FIDO
+    activate App
+    App -> App: ""Authenticator.generateKeypair()""
+    App -> Alice: I'll need your fingerprint for this.
+    deactivate App
+    activate Alice
+    Alice --> App: Sure. Here you go.
+    deactivate Alice
+    activate App
+    App -> App: ""Authenticator.sign(challenge)""
+    App -> FIDO: Here's the signed challenge and the public key.
+    deactivate App
+    activate FIDO
+    FIDO --> App: OK. Just use that key in the future when accessing Account #1.
+    deactivate FIDO
+    activate App
+    App -> Alice: You've successfully linked Account #1 at DFSP A.
+    deactivate App
+end
+@enduml

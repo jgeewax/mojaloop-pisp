@@ -1,0 +1,67 @@
+@startuml
+ 
+title PISP Transaction: Discovery
+ 
+box "Mobile Device"
+    actor "Alice\n(A@Elsewhere)" as CA
+    participant "PISP App" as App
+end box
+participant "PISP Server" as D1
+participant "DFSP A" as D2
+box "Mojaloop"
+    participant "Switch" as S
+    participant "ALS" as A 
+end box
+participant "DFSP B" as D3
+actor "Bob\n(B@Somewhere)" as CB
+ 
+CA->App: Can you send USD $100\nto B@Somewhere.
+activate App
+App->D1: Alice wants to send\nUSD $100 to B@Somewhere.
+activate D1
+D1-->App: 200 OK, got it.
+deactivate App
+D1->D1: What is Alice's payer key?\nIt's A@Elsewhere.
+D1->S: Which DFSP owns A@Elsewhere?
+activate S 
+S-->D1:202, I'll get back to you.
+deactivate D1
+S->A:Which DFSP owns\nA@Elsewhere?
+activate A
+A-->S:It's DFSP A.
+deactivate A
+S->D1:DFSP A speaks for A@Elsewhere.
+activate D1
+D1-->S:200 OK, got it.
+deactivate S 
+
+D1->S:Which DFSP owns B@Somewhere?
+activate S
+S-->D1:202 I'll get back to you
+deactivate D1
+S->A:Which DFSP owns\nB@Somewhere?
+activate A 
+A-->S:It's DFSP B
+deactivate A
+S->D3: I hear you speak for B@Somewhere.\nCan you send over the info you have?
+activate D3
+D3-->S:202, I'll get back to you.
+deactivate S
+D3->D3: Lookup B@Somewhere's info.
+D3->S: OK, here's Bob's (B@Somewhere's)\npersonal information.
+activate S
+S-->D3: 200 OK, got it.
+deactivate D3
+ 
+S->D1: DFSP A speaks for B@Somewhere.\nThe customer is Bob.
+activate D1
+D1-->S: 200 OK, got it.
+deactivate S
+D1->App: Mojaloop says B@Somewhere is Bob.
+activate App
+App->CA: You want to send money to Bob, right?
+CA-->App: Yes, I do.
+App->D1: Customer is satisfied that\nBob is the right recipient.
+deactivate App
+
+@enduml
