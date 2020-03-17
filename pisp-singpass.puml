@@ -5,6 +5,7 @@ title PISP: Linking
 box "Mobile device"
     actor Alice
     participant "PISP App" as App
+    participant "PISP Server" as PISP
 end box
 participant "SingPass" as IP
 box "DFSP"
@@ -24,18 +25,18 @@ group SingPass Login
     App -> Alice: OK. We're routing you to a SingPass login.\nIt will redirect to us when you're done.
     deactivate App
     activate Alice
-    Alice -> IP: ""GET singpass.gov.sg/login""
+    Alice -> IP: I'd like to login with SingPass.\n""GET singpass.gov.sg/login""
     activate IP
-    IP --> Alice: ""<html><form ...> ...</html>""
+    IP --> Alice: Sure. Here's your login form.\n""200 OK <html><form ...> ...</html>""
     deactivate IP
-    Alice -> IP: ""POST singpass.gov.sg/login { username: Alice, password: ****** }""
+    Alice -> IP: OK. Here's my credentials.\n""POST singpass.gov.sg/login { username: Alice, password: ****** }""
     activate IP
     IP -> Alice: Confirm your login with your SingPass mobile app as 2FA.
     deactivate IP
     Alice --> IP: Click "Approve" in the SingPass mobile app.
     deactivate Alice
     activate IP
-    IP -> App: 302. Alice logged in.\nHere's a SingPass token.
+    IP -> App: Alice logged in. Here's a SingPass token.\n""302 pisp-server/link?credentials=~*~*~*""
     deactivate IP
     activate App
 end
