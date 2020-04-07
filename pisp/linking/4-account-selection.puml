@@ -1,0 +1,36 @@
+@startuml
+
+title PISP Linking: Account selection
+!include participants.iuml
+
+... PISP Server has an access token for future use ...
+
+autonumber 8 "<b>DELE-#</b>"
+Alice -> Server: ""GET pisp.example.com/token?secret=~*~*~*~*""
+activate Alice
+activate Server
+Server --> Alice: 200 OK, got it.
+deactivate Alice
+Server -> Server: Store access token for future use.
+
+autonumber 1 "<b>ACCT-#</b>"
+group Account selection
+    Server -> Switch: Here's my token. Which the accounts do I\nhave access to at DFSP A?
+    activate Switch
+    Switch -> AIP: What accounts are available for this token?
+    activate AIP
+    AIP --> Switch: That token can access account #1, #2, and #3 (including balances).
+    deactivate AIP
+    Switch --> Server: Alice is able to link with Account #1, #2, or #3.
+    deactivate Switch
+    Server --> App: Alice is able to link with Account #1, #2, or #3.
+    deactivate Server
+    activate App
+    App --> Alice: You have access to Account #1, #2, and #3.\nWhich do you want to link?
+    deactivate App
+    activate Alice
+    Alice -> App: I'd like to link Account #1 please.
+    deactivate Alice
+end
+
+@enduml

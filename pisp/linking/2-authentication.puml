@@ -1,0 +1,28 @@
+@startuml
+title PISP Linking: Authentication
+!include participants.iuml
+
+... Alice chooses DFSP A ...
+
+autonumber 1 "<b>DISC-#</b>"
+Alice -> App: My account is with DFSP A.
+deactivate Alice
+activate App
+
+autonumber 1 "<b>AUTH-#</b>"
+group Authentication: Prove to the DFSP that you are their customer.
+    App -> Alice: OK. We'll open a direct you to DFSP A's login URL.\nIt will redirect to us when you're done.
+    deactivate App
+    activate Alice
+    Alice -> IP: ""GET dfspa.example.com/login?redirect=pisp.example.com/token""
+    activate IP
+    IP --> Alice: 200 OK, ""<html><form ...> ...</html>""
+    deactivate IP
+    Alice -> IP: ""POST dfspa.example.com/login { username: Alice, password: ~*~*~*~*~*~* }""
+    activate IP
+    IP --> Alice: 200 OK, got it.
+    deactivate Alice
+    IP -> IP: Verify credentials
+end
+
+@enduml

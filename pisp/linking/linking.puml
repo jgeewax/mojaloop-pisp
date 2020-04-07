@@ -3,7 +3,7 @@
 title PISP: Linking
 autonumber
 
-!include pisp-linking-participants.puml
+!include participants.iuml
 
 note over Alice, Server
     During registration, DFSPs provide Auth URLs and PISPs provide redirect domains.
