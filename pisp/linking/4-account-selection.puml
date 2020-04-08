@@ -9,9 +9,9 @@ autonumber 8 "<b>DELE-#</b>"
 Alice -> Server: ""GET pisp.example.com/token?secret=~*~*~*~*""
 activate Alice
 activate Server
+Server -> Server: Store access token for future use.
 Server --> Alice: 200 OK, got it.
 deactivate Alice
-Server -> Server: Store access token for future use.
 
 autonumber 1 "<b>ACCT-#</b>"
 group Account selection

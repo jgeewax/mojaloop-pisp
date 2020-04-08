@@ -15,13 +15,13 @@ group Authentication: Prove to the DFSP that you are their customer.
     deactivate App
     activate Alice
     Alice -> IP: ""GET dfspa.example.com/login?redirect=pisp.example.com/token""
+    ' TODO: Clarify what parameters are in the redirect URL
     activate IP
     IP --> Alice: 200 OK, ""<html><form ...> ...</html>""
     deactivate IP
     Alice -> IP: ""POST dfspa.example.com/login { username: Alice, password: ~*~*~*~*~*~* }""
-    activate IP
-    IP --> Alice: 200 OK, got it.
     deactivate Alice
+    activate IP
     IP -> IP: Verify credentials
 end
 
