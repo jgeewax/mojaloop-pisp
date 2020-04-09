@@ -1,0 +1,58 @@
+@startuml
+title PISP Linking: Authentication
+!include participants.iuml
+
+... Alice chooses DFSP A ...
+
+autonumber 1 "<b>DISC-#</b>"
+Alice -> App: My account is with DFSP A.
+deactivate Alice
+activate App
+
+autonumber 1 "<b>AUTH-#</b>"
+group Authentication: Prove to the DFSP that you are their customer.
+    App -> Alice: OK. Please authenticate with DFSP A and grant us permission to access your account.\nYou will be redirected back here when you're done.
+    App -> Browser: Open the page at https://dfspa.com/auth?client_id=...
+    deactivate App
+
+    activate Browser
+    Browser -> IdP: ""GET htps://dfspa.com/auth?client_id=...""
+    activate IdP
+    Browser --> Alice: Login to DFSP A
+    activate Alice
+    Alice --> Browser: Username and Password
+    Browser --> IdP: ""POST dfspa.example.com/login { username: Alice, password: ****** }""
+    IdP -> Browser: ""302. Location: htps://dfspa.com/consent?session_id=...""
+    deactivate IdP
+    Browser -> AS: ""GET htps://dfspa.com/consent?sessions_id=...""
+    activate AS
+    Browser -> Alice: Do you consent to PISP viewing your balance and initiatiing payments on your behalf?
+    Alice -> Browser: Yes
+    Browser --> AS: ""POST dfspa.com/consent""
+    AS -> Switch: I've been instructed to redirect to\n""pisp.example.com/token"". Is that OK?
+    activate Switch
+    Switch -> AS: Yep! That's fine!
+    deactivate Switch
+    AS --> Browser: ""302. Location: htps://pisp.com/callback?code=...""
+    Browser -> App: Authorization code grant.
+    deactivate Browser
+    activate App
+    App --> AS: Exchange this code for a an access token and a refresh token.
+    AS --> App: Here's your access token and refresh token
+    deactivate AS
+    
+    App -> Alice: OK. We'll open a direct you to DFSP A's login URL.\nIt will redirect to us when you're done.
+    deactivate App
+    activate Alice
+    Alice -> IP: ""GET dfspa.example.com/login?redirect=pisp.example.com/token""
+    activate IP
+    IP --> Alice: 200 OK, ""<html><form ...> ...</html>""
+    deactivate IP
+    Alice -> IP: ""POST dfspa.example.com/login { username: Alice, password: ~*~*~*~*~*~* }""
+    activate IP
+    IP --> Alice: 200 OK, got it.
+    deactivate Alice
+    IP -> IP: Verify credentials
+end
+
+@enduml
