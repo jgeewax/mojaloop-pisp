@@ -7,29 +7,29 @@ title PISP Linking: Delegation
 ... Alice logs in with credentials directly to DFSP A ...
 
 autonumber 4 "<b>AUTH-#</b>"
-Alice -> IP: ""POST dfspa.example.com/login { username: Alice, password: ~*~*~*~*~*~* }""
+Alice -> DFSP: ""POST dfspa.example.com/login { username: Alice, password: ~*~*~*~*~*~* }""
 activate Alice
-activate IP
-IP -> IP: Verify\ncredentials
+activate DFSP
+DFSP -> DFSP: Verify\ncredentials
 
 autonumber 1 "<b>DELE-#</b>"
 group Delegation: Provide a secret the PISP can use to act on the user's behalf.
-    IP -> Switch: What's the redirect\ndomain for PISP?
+    DFSP -> Switch: What's the redirect\ndomain for PISP?
     activate Switch
-    Switch --> IP: 202 I'll get back to you.
-    deactivate IP
+    Switch --> DFSP: 202 I'll get back to you.
+    deactivate DFSP
     Switch -> ALS: What's the redirect\ndomain for PISP?
     activate ALS
     ALS --> Switch: It's ""pisp.example.com"".
     deactivate ALS
-    Switch -> IP: The domain for PISP is\n""pisp.example.com""
-    activate IP
-    IP --> Switch: 200 OK, got it.
+    Switch -> DFSP: The domain for PISP is\n""pisp.example.com""
+    activate DFSP
+    DFSP --> Switch: 200 OK, got it.
     ' TODO: Does the IP validate the domain here?
     deactivate Switch
-    IP --> Alice: ""302 pisp.example.com/token?secret=~*~*~*~*""
+    DFSP --> Alice: ""302 pisp.example.com/token?secret=~*~*~*~*""
     deactivate Alice
-    deactivate IP
+    deactivate DFSP
     Alice -> Server: ""GET pisp.example.com/token?secret=~*~*~*~*""
     activate Alice
     activate Server

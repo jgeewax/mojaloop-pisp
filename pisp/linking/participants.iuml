@@ -8,7 +8,4 @@ box "Mojaloop"
     participant Switch
     participant "Central\nFIDO Server" as FIDO
 end box
-box "DFSP A"
-    participant "DFSP A\n(as Identity Provider)" as IP
-    participant "DFSP A\n(as Account Info Provider)" as AIP
-end box
+participant "DFSP A" as DFSP

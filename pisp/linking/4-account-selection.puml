@@ -9,28 +9,31 @@ autonumber 8 "<b>DELE-#</b>"
 Alice -> Server: ""GET pisp.example.com/token?secret=~*~*~*~*""
 activate Alice
 activate Server
-Server -> Server: Store access token for future use.
+Server -> Server: Store access token\nfor future use.
 Server --> Alice: 200 OK, got it.
-deactivate Alice
 
 autonumber 1 "<b>ACCT-#</b>"
 group Account selection
-    Server -> Switch: Here's my token. Which the accounts do I\nhave access to at DFSP A?
+    Server -> Switch: Here's my token. Which accounts\ndo I have access to at DFSP A?
     activate Switch
-    Switch -> AIP: What accounts are available for this token?
-    activate AIP
-    AIP --> Switch: That token can access account #1, #2, and #3 (including balances).
-    deactivate AIP
-    Switch --> Server: Alice is able to link with Account #1, #2, or #3.
+    Switch --> Server: 202 I'll get back to you.
+    Switch -> DFSP: What accounts are\navailable for this token?
+    activate DFSP
+    DFSP --> Switch: That token can access\naccount #1, #2, and #3.
+    deactivate DFSP
+    Switch -> Server: Alice is able to link\nwith Account #1, #2, or #3.
+    Server --> Switch: 200 OK, got it.
     deactivate Switch
-    Server --> App: Alice is able to link with Account #1, #2, or #3.
+    Server -> App: Alice is able to link with\nAccount #1, #2, or #3.
     deactivate Server
     activate App
-    App --> Alice: You have access to Account #1, #2, and #3.\nWhich do you want to link?
+    App -> Alice: You have access to Account\n~#1, #2, and #3. Which do you\nwant to link?
     deactivate App
-    activate Alice
     Alice -> App: I'd like to link Account #1 please.
     deactivate Alice
+    activate App
 end
+
+... Alice has now chosen the specific account she wants to link with ...
 
 @enduml
