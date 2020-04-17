@@ -10,6 +10,7 @@ box "PISP"
 participant "PISP Server" as Server
 end box
 box "Mojaloop"
+    participant "FIDO Server" as FIDO
     participant Switch
 end box
 box "DFSP A"
@@ -43,11 +44,12 @@ alt OTP-based Authentication and Consent
     Server -> App: Get OTP from User
     App -> Alice: Please provide the OTP sent by DFSP A \nto authroize me to access your account
     Alice -> App: 1234
-    App -> Server: OTP: 1234
-    Server -> Switch: PUT /authorizations/{ID}\n { authenticationInfo: 1234, ... }
-    Switch --> Server: 200 Success
-    Switch -> DFSP: PUT /authorizations/{ID}\n { authenticationInfo: 1234,  }
-    DFSP --> Switch: 200 Success
+    group FIDO Enrollment
+        App --> App: Invoke platform FIDO enrollment flow
+        App --> Alice: Scan your fingerprint to create a new credential
+        Alice -> App: <scan fingerprint>    
+    end
+    App -> Server: OTP: 1234, FIDO Credential: {...}
 else Web-based Authentication and Consent
     DFSP -> Switch: GET /authorizations/{ID}\n?authenticationType=Web\n&url=https://dfspa.com/auth?request_uri={ID}
     Switch --> DFSP: 200 Success
@@ -62,25 +64,33 @@ else Web-based Authentication and Consent
     Browser -> DFSP: POST https://dfspa.com/login?request_uri={ID}
     DFSP --> Browser: 302 Location: https://dfspa.com/consent?request_uri={ID}
     Browser -> DFSP: GET https://dfspa.com/consent?request_uri={ID}
-    DFSP --> Browser: 200 Success - Consent
-    Alice -> Browser: I consent to PISP having the following access to my account...
-    Browser -> DFSP: POST https://dfspa.com/consent?request_uri={ID}
-    opt FIDO Enrollment
-        DFSP --> Browser: 200 Success - Enrol FIDO Credential via WebAuthn API
+    DFSP --> Browser: 200 Success - Consent (with account selector)
+    Alice -> Browser: I consent to PISP having access to my Savings account...
+    Browser -> DFSP: POST https://dfspa.com/consent?request_uri={ID}&account=savings
+    alt PISP is Relying Party
+        DFSP --> Browser: 302 Location: pisp-app://callback?code=abcd
+        Browser -> App: Deeplink: pisp-app://callback?code=abcd
+        App --> App: Invoke platform FIDO enrollment flow
+        App --> Alice: Scan your fingerprint to create a new credential
+        Alice -> App: <scan fingerprint>
+    else DFSP is Relying Party (pending some updates to FIDO)
+        DFSP --> Browser: 200 Success - Create FIDO Credential via WebAuthn API
+        Browser --> Browser: Invoke WebAuthn create
         Browser --> Alice: Scan your fingerprint to create a new credential
         Alice -> Browser: <scan fingerprint>
         Browser -> DFSP: POST https://dfspa.com/fido { credentialId: ..., publicKey:...}
         DFSP --> DFSP: Record Public Key\n (will be used to auth \n PISP-initated txs later)
+        DFSP -> FIDO: Store the details of this credential for Alice
+        FIDO -> DFSP: Got 'em
+        DFSP --> Browser: 302 Location: pisp-app://callback?code=abcd&fido-credential-id=xxx
+        Browser -> App: Deeplink: pisp-app://callback?code=abcd
     end
-    DFSP --> Browser: 302 Location: pisp-app://callback?code=abcd
-    Browser -> App: Deeplink: pisp-app://callback?code=abcd
-    App -> Server: Code: xxxx
-    DFSP -> Switch: PUT /authorizations/{ID}\n { authenticationInfo: abcd, ... }
-    Switch --> DFSP: 200 Success
-    Switch -> Server: PUT /authorizations/{ID}\n { authenticationInfo: abcd, ... }
-    Server --> Switch: 200 Success
+    App -> Server: Code: xxxx, FIDO Credential: {...} (unless captured by DFSP)
 end
-
+    Server -> Switch: PUT /authorizations/{ID}\n { authenticationInfo: abcd, \n fidoCredential {...}... }
+    Switch --> Server: 200 Success
+    Switch -> DFSP: PUT /authorizations/{ID}\n { authenticationInfo: abcd, \n fidoCredential {...} ... }
+    DFSP --> Switch: 200 Success
     DFSP --> Switch: PUT /authorizationRequests/{ID}\n { accessToken: xxxx}
     Switch -> DFSP: 200 Success
     Switch --> Server: PUT /authorizationRequests/{ID}\n { accessToken: xxxx}
